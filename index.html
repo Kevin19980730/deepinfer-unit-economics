@@ -531,7 +531,7 @@ code { font: 13px var(--f-mono); }
     var costGW = s.price * gpusPerGW * 8760;
     var bn = function (v) { return (v < 0 ? "-$" : "$") + (Math.abs(v) / 1e9).toFixed(Math.abs(v) >= 1e11 ? 0 : 1) + "B"; };
     $("revNote").textContent = int(gpusPerGW) + " GPUs per GW. A busy GPU serves " + (1 / busyHrsPerBn).toFixed(2) + "B tokens per hour at this mix. GPU cost per GW-year at $" +
-      s.price.toFixed(2) + "/hr: " + bn(costGW) + ". Tokens per GW-year at " + Math.round(s.util * 100) + "% utilization: " + (gpusPerGW * 8760 * s.util / busyHrsPerBn / 1e6).toFixed(1) + " quadrillion.";
+      s.price.toFixed(2) + "/hr: " + bn(costGW) + ". Tokens per GW-year at " + Math.round(s.util * 100) + "% utilization: " + (gpusPerGW * 8760 * s.util / busyHrsPerBn / 1e9).toFixed(1) + " quintillion (x10^18).";
     $("revBody").innerHTML = PRICES.map(function (q) {
       if (q.g) return "<tr class=\"grp\"><td colspan=\"5\">" + q.g + "</td></tr>";
       var busy = revenue(m, q) / busyHrsPerBn, atU = busy * s.util, revGW = atU * gpusPerGW * 8760, gp = revGW - costGW;
