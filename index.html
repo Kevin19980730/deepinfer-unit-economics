@@ -1,0 +1,562 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Cost per token for DeepSeek V4.1-Flash on Blackwell from DeepInfer's benchmarks, against Oct 2026 prices and OpenRouter traffic.">
+<style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}*,*::before,*::after{box-sizing:border-box}</style>
+<title>DeepInfer Unit Economics</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: datasheet. Controls rail on the left, results stacked on the right; one column on phones. */
+:root {
+  --bg: #f3f6fa; --surface: #ffffff; --ink: #142031; --muted: #5a6779; --rule: #d6dde7; --grid: #e7ecf2;
+  --accent: #1f5fc9; --accent-soft: rgba(31,95,201,.10); --accent2: #c8691a;
+  --good: #1b7a4c; --warn: #b4521b; --band: rgba(27,122,76,.14); --warnband: rgba(180,82,27,.12);
+  --f-display: "Archivo", "Arial Narrow", Arial, sans-serif;
+  --f-body: "IBM Plex Sans", "Segoe UI", Helvetica, Arial, sans-serif;
+  --f-mono: "IBM Plex Mono", Consolas, "Courier New", monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0d1219; --surface: #151c27; --ink: #e5eaf1; --muted: #95a2b5; --rule: #2a3443; --grid: #1f2835;
+  --accent: #6d9ef2; --accent-soft: rgba(109,158,242,.14); --accent2: #ec9c52;
+  --good: #4fc28c; --warn: #f08c5c; --band: rgba(79,194,140,.16); --warnband: rgba(240,140,92,.14); color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #0d1219; --surface: #151c27; --ink: #e5eaf1; --muted: #95a2b5; --rule: #2a3443; --grid: #1f2835;
+  --accent: #6d9ef2; --accent-soft: rgba(109,158,242,.14); --accent2: #ec9c52;
+  --good: #4fc28c; --warn: #f08c5c; --band: rgba(79,194,140,.16); --warnband: rgba(240,140,92,.14); color-scheme: dark }
+
+body { background: var(--bg); color: var(--ink); font: 15px/1.55 var(--f-body); }
+.wrap { max-width: 1120px; margin: 0 auto; padding-block: 28px 56px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+header { display: grid; gap: 8px; padding-bottom: 20px; border-bottom: 1px solid var(--rule); margin-bottom: 24px; }
+.eyebrow { font: 500 12px/1.3 var(--f-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+h1 { font: 800 clamp(28px, 4.4vw, 44px)/1.05 var(--f-display); letter-spacing: -.01em; margin: 0; text-wrap: balance; }
+.lede { max-width: 70ch; color: var(--muted); margin: 0; }
+a { color: var(--accent); }
+h2 { font: 700 19px/1.2 var(--f-display); margin: 0; text-wrap: balance; }
+h3 { font: 600 12px/1.2 var(--f-mono); letter-spacing: .07em; text-transform: uppercase; color: var(--muted); margin: 0; }
+.sub { color: var(--muted); font-size: 13.5px; margin: 0; max-width: 72ch; }
+
+.layout { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 28px; align-items: start; }
+@media (max-width: 860px) { .layout { grid-template-columns: minmax(0, 1fr); } }
+
+.rail { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 12px); display: grid; gap: 16px;
+  background: var(--surface); border: 1px solid var(--rule); border-radius: 6px; padding: 18px; max-height: calc(100vh - 24px); overflow-y: auto; }
+@media (max-width: 860px) { .rail { position: static; max-height: none; } }
+.ctl { display: grid; gap: 6px; }
+.ctl label { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; font-size: 13.5px; font-weight: 500; }
+.ctl output { font: 500 14px var(--f-mono); color: var(--accent); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.ctl .hint { font-size: 12px; color: var(--muted); }
+input[type=range] { width: 100%; accent-color: var(--accent); }
+select { font: 14px var(--f-body); padding: 6px 8px; border: 1px solid var(--rule); border-radius: 4px; background: var(--bg); color: var(--ink); width: 100%; }
+.presets { display: flex; flex-wrap: wrap; gap: 6px; }
+button { font: 500 12.5px var(--f-body); padding: 6px 10px; border-radius: 4px; border: 1px solid var(--rule); background: var(--bg); color: var(--ink); cursor: pointer; text-align: left; }
+button:hover { border-color: var(--accent); }
+button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.railgroup { display: grid; gap: 14px; padding-top: 14px; border-top: 1px solid var(--rule); }
+
+.main { display: grid; gap: 30px; min-width: 0; }
+.tiles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1px; background: var(--rule); border: 1px solid var(--rule); border-radius: 6px; overflow: hidden; }
+@media (max-width: 1000px) { .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.tile { background: var(--surface); padding: 14px 16px; display: grid; gap: 4px; align-content: start; }
+.tile .v { font: 700 28px/1.1 var(--f-display); font-variant-numeric: tabular-nums; }
+.tile .u { font-size: 12.5px; color: var(--muted); }
+
+section { display: grid; gap: 12px; min-width: 0; }
+.panel { background: var(--surface); border: 1px solid var(--rule); border-radius: 6px; padding: 16px; min-width: 0; }
+svg.chart { width: 100%; height: auto; display: block; }
+svg.chart text { fill: var(--muted); font: 11px var(--f-mono); }
+svg.chart .axis { stroke: var(--rule); }
+svg.chart .gl { stroke: var(--grid); }
+.legend { display: flex; flex-wrap: wrap; gap: 16px; font-size: 13px; color: var(--muted); }
+.legend i { display: inline-block; width: 18px; height: 3px; vertical-align: middle; margin-right: 6px; border-radius: 2px; }
+
+.tablewrap { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 14px; font-variant-numeric: tabular-nums; }
+th, td { text-align: right; padding: 8px 10px; border-bottom: 1px solid var(--rule); white-space: nowrap; }
+th:first-child, td:first-child { text-align: left; white-space: normal; min-width: 180px; }
+thead th { font: 600 11.5px var(--f-mono); letter-spacing: .05em; text-transform: uppercase; color: var(--muted); }
+td.num { font-family: var(--f-mono); }
+td .d { display: block; font-size: 12px; color: var(--muted); }
+tr.sel td { background: var(--accent-soft); }
+tr.grp td { font: 600 11.5px var(--f-mono); letter-spacing: .05em; text-transform: uppercase; color: var(--muted); background: var(--bg); }
+.pill { display: inline-block; font: 600 11.5px var(--f-mono); padding: 2px 7px; border-radius: 10px; }
+.pill.good { color: var(--good); background: var(--band); }
+.pill.warn { color: var(--warn); background: var(--warnband); }
+.tag { font: 500 10.5px var(--f-mono); letter-spacing: .05em; text-transform: uppercase; padding: 1px 6px; border-radius: 3px; border: 1px solid var(--rule); color: var(--muted); white-space: nowrap; }
+
+blockquote { margin: 0; padding: 12px 16px; border-left: 3px solid var(--rule); background: var(--surface); color: var(--muted); font-size: 14px; max-width: 75ch; }
+blockquote strong { color: var(--ink); }
+ul.list { margin: 0; padding-left: 20px; display: grid; gap: 8px; max-width: 75ch; }
+.note { font-size: 12.5px; color: var(--muted); margin: 0; }
+code { font: 13px var(--f-mono); }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">deepseek-ai/DeepInfer &middot; DeepSeek V4.1-Flash &middot; NVIDIA SM100 &middot; prices and traffic as of 21 Oct 2026</div>
+    <h1>DeepInfer Unit Economics</h1>
+    <p class="lede">DeepSeek's open inference engine ships with three throughput charts and no cost figures. This page turns those charts into dollars per token, sets them against today's V4.1-Flash prices and real OpenRouter traffic, and checks a widely shared margin estimate. GPU price defaults to Silicon Data's B200 rental index; utilization is an assumption you can change. Throughput is read off the charts in the <a href="https://github.com/deepseek-ai/DeepInfer" target="_blank" rel="noopener">repo</a>.</p>
+  </header>
+
+  <div class="layout">
+    <aside class="rail" aria-label="Assumptions">
+      <h3>Assumptions</h3>
+      <div class="ctl">
+        <label for="price">GPU cost per hour <output id="priceOut"></output></label>
+        <input type="range" id="price" min="1.5" max="10" step="0.01" value="6.14">
+        <span class="hint">Market rental, Silicon Data index</span>
+        <div class="presets">
+          <button type="button" class="pP" data-p="6.14">B200 today $6.14</button>
+          <button type="button" class="pP" data-p="4.41">B200 Jan-2026 avg $4.41</button>
+          <button type="button" class="pP" data-p="7.02">B300 today $7.02</button>
+        </div>
+        <span class="hint">SemiAnalysis TCO, July 2026</span>
+        <div class="presets">
+          <button type="button" class="pP" data-p="1.86">Own GB200 NVL72 $1.86</button>
+          <button type="button" class="pP" data-p="4">Rent GB200 NVL72, 3-yr $4.00</button>
+          <button type="button" class="pP" data-p="1.73">Own B200 $1.73</button>
+          <button type="button" class="pP" data-p="3.7">Rent B200, 3-yr $3.70</button>
+        </div>
+        <span class="hint">The 64-GPU decode setup needs an NVL72 rack, so GB200 is the matching chip; B200 servers fit the 8-GPU setup. What each figure covers is under <a href="#gpucost">GPU cost presets</a>.</span>
+      </div>
+      <div class="ctl">
+        <label for="util">Utilization <output id="utilOut"></output></label>
+        <input type="range" id="util" min="20" max="100" step="1" value="37">
+        <div class="presets">
+          <button type="button" class="uP" data-u="100">Benchmark 100%</button>
+          <button type="button" class="uP" data-u="82">Backfilled like DeepSeek 2025 82%</button>
+          <button type="button" class="uP" data-u="53">Copilot-shaped 53%</button>
+          <button type="button" class="uP" data-u="37">Sized for DeepSeek&rsquo;s peak 37%</button>
+        </div>
+        <span class="hint">How each preset is derived is under <a href="#utilization">Utilization presets</a>.</span>
+      </div>
+      <div class="railgroup">
+        <div class="ctl">
+          <label for="ep">Decode deployment</label>
+          <select id="ep">
+            <option value="ep64">EP64 &middot; 64 GPUs, 384+64 experts</option>
+            <option value="ep8">EP8 &middot; 8 GPUs, 384+32 experts</option>
+          </select>
+        </div>
+        <div class="ctl">
+          <label for="batch">Decode requests per GPU</label>
+          <select id="batch"></select>
+          <span class="hint">More requests: cheaper tokens, slower per user.</span>
+        </div>
+        <div class="ctl">
+          <label for="pbatch">Prefill tokens per GPU step</label>
+          <select id="pbatch"></select>
+        </div>
+      </div>
+      <div class="railgroup">
+        <h3>Traffic mix</h3>
+        <div class="ctl">
+          <label for="ratio">Input tokens per output token <output id="ratioOut"></output></label>
+          <input type="range" id="ratio" min="1" max="150" step="0.1" value="71.7">
+        </div>
+        <div class="ctl">
+          <label for="cache">Input cache hit rate <output id="cacheOut"></output></label>
+          <input type="range" id="cache" min="0" max="99" step="0.1" value="94.2">
+        </div>
+        <div class="presets" id="mixPresets">
+          <button type="button" class="mP" data-r="51.1" data-c="91.7">OpenRouter V4.1 Flash, last 7 days</button>
+          <button type="button" class="mP" data-r="71.7" data-c="94.2">OpenRouter V4.1 Flash 1017, first 4 days</button>
+          <button type="button" class="mP" data-r="99" data-c="98">Zephyr tweet (97 / 2 / 1)</button>
+          <button type="button" class="mP" data-r="3.6" data-c="56">DeepSeek, Feb 2025</button>
+        </div>
+        <button type="button" id="reset">Reset all to defaults</button>
+      </div>
+    </aside>
+
+    <div class="main">
+      <div class="tiles" aria-live="polite">
+        <div class="tile"><h3>Output cost</h3><div class="v" id="tOut"></div><div class="u" id="tOutU"></div></div>
+        <div class="tile"><h3>Uncached input cost</h3><div class="v" id="tIn"></div><div class="u">per 1M tokens</div></div>
+        <div class="tile"><h3>Cost per 1B tokens</h3><div class="v" id="tBn"></div><div class="u" id="tBnU"></div></div>
+        <div class="tile"><h3>DeepSeek gross margin</h3><div class="v" id="tGM"></div><div class="u">at its realised OpenRouter price</div></div>
+      </div>
+
+      <section>
+        <h2>Gross margin by price point</h2>
+        <p class="sub">Revenue and GPU cost for the same token mix, set in the rail. Cached input is billed at the cache-hit price and costed at zero GPU time. Prices are list prices from DeepSeek and OpenRouter on 21 Oct 2026; discounted rows use the discounted price.</p>
+        <div class="panel tablewrap">
+          <table>
+            <thead><tr><th>Price point</th><th>Uncached in / cached in / out ($/1M)</th><th>Revenue per 1B tokens</th><th>Gross margin</th></tr></thead>
+            <tbody id="mBody"></tbody>
+          </table>
+        </div>
+        <p class="note">DeepSeek's realised price: OpenRouter reports an effective output price of $0.936/1M for DeepSeek's own V4.1-Flash 1017 endpoint. Output is never cached, so that is 0.60 &times; (1 + peak share), which puts 56% of its output tokens in peak hours that cover only 21% of the week. The input prices in that row assume the same peak share.</p>
+      </section>
+
+      <section id="zephyr">
+        <h2>Checking the &ldquo;87.76% to 96.94%&rdquo; tweet</h2>
+        <blockquote><strong>@zephyr_z9, 20 Oct 2026.</strong> Assumes 97% cached input, 2% uncached input and 1% output; 80k uncached input tok/s/GPU for prefill and 16k output tok/s/GPU at 250 tok/s/user for decode; $3&ndash;6 per GPU-hour; DeepSeek's off-peak and peak list prices. Result: 87.76%&ndash;93.88% margin off-peak, 93.88%&ndash;96.94% at peak.</blockquote>
+        <p class="sub">The arithmetic reproduces exactly (875 GPU-seconds and $11.91 of off-peak revenue per billion tokens). The throughput inputs match DeepInfer's charts: 16k at 250 tok/s/user is the EP64, 64-request point. The rows below keep the tweet's throughput and change one assumption at a time.</p>
+        <div class="panel tablewrap">
+          <table>
+            <thead><tr><th>Scenario</th><th>GPU-s per 1B</th><th>Revenue per 1B</th><th>Margin at $3/hr</th><th>Margin at $6/hr (&asymp; B200 today)</th></tr></thead>
+            <tbody id="zBody"></tbody>
+          </table>
+        </div>
+        <ul class="list">
+          <li><strong>The mix assumption is wrong but doesn't matter much.</strong> Real V4.1-Flash traffic on OpenRouter has twice the output share and four times the uncached input of the tweet's mix. Revenue rises with it, because DeepSeek prices each token type at a similar multiple of its GPU cost (about 14&times; for uncached input and 12&times; for output at $3/hr). Margin barely moves.</li>
+          <li><strong>Utilization and price matter most.</strong> Benchmark throughput assumes the GPUs are busy every second. At a Copilot-shaped 53% utilization, the off-peak margin at $6/hr falls to about 74%. At the prices resellers actually charge, the margin falls further.</li>
+          <li><strong>This is not DeepSeek's own margin.</strong> It describes a Blackwell operator charging DeepSeek's list price. DeepSeek can't buy SM100. Its actual fleet cost is unknown, and its reported API gross margin was 82.9% (blended with the free app: 44.6%).</li>
+          <li><strong>GPU rental is not all of cost of goods.</strong> KV-cache storage for 92&ndash;97% hit rates, networking, CPUs and peak-hour headroom all sit outside the GPU-hour.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>Output cost against per-user speed</h2>
+        <p class="sub">Each dot is one batch size from the repo's decode sweep (128k context, 3 draft tokens, 75% per-token acceptance). Fast streaming is the expensive part. Click a dot to select it.</p>
+        <div class="panel">
+          <svg class="chart" id="decChart" viewBox="0 0 680 330" role="img" aria-label="Decode cost per million output tokens versus per-user speed"></svg>
+          <div class="legend"><span><i style="background:var(--accent)"></i>EP64, 64 GPUs</span><span><i style="background:var(--accent2)"></i>EP8, 8 GPUs</span><span>Log scale on cost</span></div>
+        </div>
+      </section>
+
+      <section>
+        <h2>Prefill cost against step latency</h2>
+        <p class="sub">4 GPUs, 128k context, decoder bounded replay of 140 tokens. Bigger batches raise throughput but make each request wait longer for its first token. Cached input tokens skip prefill.</p>
+        <div class="panel">
+          <svg class="chart" id="preChart" viewBox="0 0 680 280" role="img" aria-label="Prefill cost per million input tokens versus latency"></svg>
+        </div>
+      </section>
+
+      <section>
+        <h2>V4.1-Flash traffic on OpenRouter</h2>
+        <p class="sub">Daily token counts from OpenRouter's model activity data. Output includes reasoning tokens, which are 66&ndash;68% of output. Input per request is 40&ndash;56k tokens, which is agent traffic: each turn resends the conversation so far, so most input is a cache hit.</p>
+        <div class="panel tablewrap">
+          <table>
+            <thead><tr><th>Week ending</th><th>Input : output</th><th>Cache hit rate</th></tr></thead>
+            <tbody id="trafficBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section>
+        <h2>Decode sweep, all points</h2>
+        <div class="panel tablewrap">
+          <table>
+            <thead><tr><th>Requests/GPU</th><th>EP64 tok/s/user</th><th>EP64 tok/s/GPU</th><th>EP64 $/1M</th><th>EP8 tok/s/user</th><th>EP8 tok/s/GPU</th><th>EP8 $/1M</th></tr></thead>
+            <tbody id="sweepBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section>
+        <h2>Against DeepSeek's Feb-2025 disclosure</h2>
+        <p class="sub">The 2025 numbers are fleet averages from the <em>V3/R1 Inference System Overview</em>, so they include real-world utilization. Its prefill rate of 73.7k tok/s per node counted cache hits; only 44% of that input was uncached. The DeepInfer column uses your settings and the 2025 traffic mix.</p>
+        <div class="panel tablewrap">
+          <table>
+            <thead><tr><th>Metric</th><th>Feb 2025, H800 fleet</th><th>DeepInfer, SM100</th><th>Change</th></tr></thead>
+            <tbody id="cmpBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="gpucost">
+        <h2>GPU cost presets</h2>
+        <p class="sub">Three ways to price a GPU-hour, from cheapest to dearest. Owning is cheapest per hour but you pay for every hour, busy or idle, so it pairs with the utilization slider. Short-term rental costs more per hour but can be scaled down when idle.</p>
+        <div class="panel tablewrap">
+          <table>
+            <thead><tr><th>Basis</th><th>GB200 NVL72</th><th>B200</th><th>B300</th><th>What it covers</th></tr></thead>
+            <tbody>
+              <tr><td>Own at hyperscaler volume<span class="d">SemiAnalysis TCO</span></td><td class="num">$1.86</td><td class="num">$1.73</td><td class="num">$2.26</td><td>All-in cost of owning: hardware amortisation, datacenter, power and operations. SemiAnalysis Datacenter Industry Model and AI Cloud TCO Model, as used in InferenceX. <span class="tag">disclosed</span></td></tr>
+              <tr><td>Rent, 3-year commit<span class="d">SemiAnalysis survey</span></td><td class="num">$4.00</td><td class="num">$3.70</td><td class="num">$4.25</td><td>SemiAnalysis market pricing survey, July 2026, as used in InferenceX. <span class="tag">disclosed</span></td></tr>
+              <tr><td>Rent, neo-cloud market<span class="d">Silicon Data index</span></td><td class="num">&ndash;</td><td class="num">$6.14</td><td class="num">$7.02</td><td>Daily neo-cloud rental index, 20 Oct 2026. B200 was $4.41 on average in Jan 2026. <span class="tag">disclosed</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="note">DeepInfer's benchmarks are SM100 chips (B200 and GB200). B300 is faster, so its price overstates cost at these throughputs. The SemiAnalysis figures are July 2026; the Silicon Data B200 index has risen since, so rental surveys taken today would likely be higher. DeepSeek itself can buy none of these chips. For reference, its Feb-2025 H800 cost was $2.00 per GPU-hour.</p>
+      </section>
+
+      <section id="utilization">
+        <h2>Utilization presets</h2>
+        <p class="sub">A fleet is sized for its busiest hour, so outside that hour some GPUs sit idle unless other work fills them. If the fleet is just full at peak, average utilization = 1 &divide; (peak-to-average demand). None of these figures is a measured V4.1-Flash fleet utilization; nobody publishes one.</p>
+        <div class="panel tablewrap">
+          <table>
+            <thead><tr><th>Preset</th><th>Derivation</th><th>Utilization</th><th>Source</th></tr></thead>
+            <tbody>
+              <tr><td>Sized for DeepSeek&rsquo;s peak<span class="d">no off-peak backfill</span></td><td class="num">peak hours = 35/168 = 20.8% of the week<br>but carry 56% of output<br>&rarr; peak &divide; average = 2.7&times; &rarr; 1 &divide; 2.7</td><td class="num">37%</td><td>OpenRouter effective output price for DeepSeek&rsquo;s V4.1-Flash 1017 endpoint ($0.936 vs $0.60 off-peak list; 17&ndash;21 Oct launch window, includes a weekend), 21 Oct 2026; DeepSeek pricing page for peak hours. <span class="tag">derived</span></td></tr>
+              <tr><td>Copilot-shaped<span class="d">typical agent workload</span></td><td class="num">weekly token peak &divide; average = 1.90&times;<br>&rarr; 1 &divide; 1.90</td><td class="num">53%</td><td>GitHub Copilot coding agent traffic, 1&ndash;7 Jun 2026 (Microsoft Azure Research, arXiv 2608.00101), Fig. 1 token series digitised. Weekends run at 36% of weekdays. <span class="tag">derived</span></td></tr>
+              <tr><td>Backfilled like DeepSeek 2025<span class="d">idle nodes moved to training</span></td><td class="num">average 226.75 nodes &divide; peak 278 nodes</td><td class="num">82%</td><td>DeepSeek <em>V3/R1 Inference System Overview</em>, 1 Mar 2025: inference shrank off-peak and freed nodes ran research and training. <span class="tag">disclosed</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="note">All three assume GPUs run at benchmark throughput whenever they are busy. Real batches run below that (variable prompt lengths, KV-cache fragmentation, draft acceptance under 75%), and a provider can&rsquo;t run at 100% even at peak without queuing. Both push the real figure lower.</p>
+      </section>
+
+      <section>
+        <h2>Why these are best-case numbers</h2>
+        <ul class="list">
+          <li><strong>Draft acceptance is fixed at 75%.</strong> The sweep assumes 3.25 tokens per decode step. Real acceptance depends on content, and output cost moves with it almost one for one.</li>
+          <li><strong>Lab runs are steady state.</strong> A production fleet has idle hours and must provision for peaks. DeepSeek's peak-hour share of output (56%) is far above the share of hours that are peak (21%).</li>
+          <li><strong>Several components are missing.</strong> The release leaves out separate prefill and decode clusters, the KV cache system and load balancing across replicas.</li>
+          <li><strong>Cheap resellers often quantize.</strong> The lowest prices on OpenRouter are FP4 endpoints; DeepInfer's charts are for DeepSeek's own precision.</li>
+          <li><strong>Throughput values are read from chart images</strong> and are accurate to roughly &plusmn;2%.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>Sources</h2>
+        <div class="panel tablewrap">
+          <table>
+            <thead><tr><th>Input</th><th>Value</th><th>Basis</th></tr></thead>
+            <tbody>
+              <tr><td>Prefill and decode throughput</td><td>Charts in <code>doc/images/</code> of the DeepInfer repo</td><td><span class="tag">read from chart</span></td></tr>
+              <tr><td>DeepSeek V4.1-Flash list prices</td><td><a href="https://api-docs.deepseek.com/quick_start/pricing/" target="_blank" rel="noopener">api-docs.deepseek.com</a>, off-peak $0.15 / $0.003 / $0.60, peak 2&times;</td><td><span class="tag">disclosed</span></td></tr>
+              <tr><td>Reseller prices, effective prices, traffic</td><td>OpenRouter endpoints, effective-pricing and model-activity data for <code>deepseek-v4.1-flash</code> and <code>-1017</code></td><td><span class="tag">disclosed</span></td></tr>
+              <tr><td>DeepSeek realised price and peak share</td><td>$0.936 effective output &divide; $0.60 off-peak</td><td><span class="tag">derived</span></td></tr>
+              <tr><td>Margin estimate being checked</td><td><a href="https://x.com/zephyr_z9/status/2112499092031185134" target="_blank" rel="noopener">@zephyr_z9 on X</a>, 20 Oct 2026</td><td><span class="tag">third party</span></td></tr>
+              <tr><td>Feb-2025 fleet costs and mix</td><td>608B in, 168B out, 56% cached; $87,072/day</td><td><span class="tag">disclosed</span></td></tr>
+              <tr><td>GPU cost per hour</td><td><a href="https://www.silicondata.com/products/silicon-index/b200" target="_blank" rel="noopener">Silicon Data B200 index</a> $6.14 (20 Oct 2026; Jan-2026 avg $4.41); B300 $7.02</td><td><span class="tag">disclosed</span></td></tr>
+              <tr><td>GPU cost per hour, owned and 3-year rental</td><td><a href="https://inferencex.semianalysis.com/calculator" target="_blank" rel="noopener">SemiAnalysis InferenceX</a> TCO: GB200 $1.86 own / $4.00 rent, B200 $1.73 / $3.70, B300 $2.26 / $4.25 (July 2026)</td><td><span class="tag">disclosed</span></td></tr>
+              <tr><td>Utilization presets</td><td>37% / 53% / 82%, see <a href="#utilization">Utilization presets</a></td><td><span class="tag">derived</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="note">Cost per 1M tokens = GPU $/hour &divide; (tokens/s/GPU &times; 3,600 &times; utilization) &times; 1,000,000. Cached input is costed at zero GPU time.</p>
+      </section>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  var DEC = {
+    ep64: [[8, 325, 2600], [16, 315, 5050], [32, 297, 9500], [64, 246, 15700], [128, 179, 22800], [256, 103, 26300]],
+    ep8:  [[8, 238, 1900], [16, 230, 3700], [32, 220, 7050], [64, 198, 12650], [128, 150, 19200], [256, 98, 24900]]
+  };
+  var PRE = [[4096, 68, 60000], [8192, 114, 71600], [16384, 200, 81700], [32768, 377, 87000], [65536, 732, 89500]];
+  var PEAK = 0.936 / 0.60 - 1;
+  var PRICES = [
+    { g: "DeepSeek first-party" },
+    { name: "DeepSeek off-peak list", d: "nights, weekends, holidays", m: 0.15, h: 0.003, o: 0.60 },
+    { name: "DeepSeek peak list", d: "01-04 and 06-10 UTC weekdays", m: 0.30, h: 0.006, o: 1.20 },
+    { name: "DeepSeek realised", d: "56% of output at peak", m: 0.15 * (1 + PEAK), h: 0.003 * (1 + PEAK), o: 0.936, key: true },
+    { g: "Resellers on OpenRouter" },
+    { name: "Together, Baseten, Fireworks", d: "most common list price", m: 0.30, h: 0.006, o: 1.20 },
+    { name: "Morph", d: "FP8", m: 0.187, h: 0.016, o: 0.60 },
+    { name: "DeepInfra", d: "FP8, after 30% discount; #2 by volume", m: 0.14, h: 0.0042, o: 0.42 },
+    { name: "Open Inference", d: "FP4", m: 0.049, h: 0.001, o: 0.375 },
+    { name: "Sail Research", d: "FP4, lowest output price", m: 0.101, h: 0.006735, o: 0.15 }
+  ];
+  var TRAFFIC = [["22 Sep (from 21 Sep)", 66.2, 88.7], ["29 Sep", 61.4, 90.9], ["6 Oct", 62.5, 91.7], ["13 Oct", 48.0, 91.2], ["20 Oct", 51.1, 91.7], ["1017 checkpoint, 17-20 Oct", 71.7, 94.2]];
+  var FEB25 = { preTpsAll: 73700 / 8, decTps: 14800 / 8, ratio: 608 / 168, cache: 0.56, inCostAll: 0.0603, outCost: 0.3003, perOut: 87072 / 168000 };
+  var DEF = { price: 6.14, util: 37, ep: "ep64", batch: "128", pbatch: "16384", ratio: 71.7, cache: 94.2 };
+  var NS = "http://www.w3.org/2000/svg";
+  var $ = function (id) { return document.getElementById(id); };
+
+  function costPerM(tps, price, util) { return price / (tps * 3600 * util) * 1e6; }
+  function money(v) {
+    if (v >= 100) return "$" + v.toFixed(0);
+    if (v >= 10) return "$" + v.toFixed(1);
+    if (v >= 1) return "$" + v.toFixed(2);
+    if (v >= 0.1) return "$" + v.toFixed(3).replace(/0$/, "");
+    if (v >= 0.01) return "$" + v.toFixed(3);
+    return "$" + v.toFixed(4);
+  }
+  function int(v) { return Math.round(v).toLocaleString("en-US"); }
+  function pct(v) { return (v * 100).toFixed(1) + "%"; }
+  function pill(gm) { return "<span class=\"pill " + (gm >= 0.5 ? "good" : "warn") + "\">" + (gm * 100).toFixed(1) + "%</span>"; }
+
+  // Per 1B total tokens: split into output, uncached input, cached input.
+  function mix(ratio, cache) {
+    var out = 1e9 / (ratio + 1), inp = 1e9 - out;
+    return { out: out, un: inp * (1 - cache), ca: inp * cache };
+  }
+  function revenue(m, p) { return (m.ca * p.h + m.un * p.m + m.out * p.o) / 1e6; }
+  function gpuSeconds(m, preTps, decTps) { return m.un / preTps + m.out / decTps; }
+
+  var batchSel = $("batch"), pbSel = $("pbatch");
+  DEC.ep64.forEach(function (r) { var o = document.createElement("option"); o.value = String(r[0]); o.textContent = r[0] + " requests"; batchSel.appendChild(o); });
+  PRE.forEach(function (r) { var o = document.createElement("option"); o.value = String(r[0]); o.textContent = int(r[0]) + " tokens (" + r[1] + " ms)"; pbSel.appendChild(o); });
+
+  function setDefaults() {
+    $("price").value = DEF.price; $("util").value = DEF.util; $("ep").value = DEF.ep;
+    batchSel.value = DEF.batch; pbSel.value = DEF.pbatch; $("ratio").value = DEF.ratio; $("cache").value = DEF.cache;
+  }
+  function S() {
+    return { price: +$("price").value, util: +$("util").value / 100, ep: $("ep").value, batch: +batchSel.value,
+      pbatch: +pbSel.value, ratio: +$("ratio").value, cache: +$("cache").value / 100 };
+  }
+  function row(ep, b) { var a = DEC[ep]; for (var i = 0; i < a.length; i++) if (a[i][0] === b) return a[i]; return a[0]; }
+  function prow(b) { for (var i = 0; i < PRE.length; i++) if (PRE[i][0] === b) return PRE[i]; return PRE[0]; }
+
+  function el(tag, attrs, parent, text) {
+    var e = document.createElementNS(NS, tag);
+    for (var k in attrs) e.setAttribute(k, attrs[k]);
+    if (text != null) e.textContent = text;
+    if (parent) parent.appendChild(e);
+    return e;
+  }
+  function clear(svg) { while (svg.firstChild) svg.removeChild(svg.firstChild); }
+
+  function drawDecode(s) {
+    var svg = $("decChart"); clear(svg);
+    var W = 680, H = 330, L = 64, R = 18, T = 16, B = 44;
+    var all = [];
+    ["ep64", "ep8"].forEach(function (k) { DEC[k].forEach(function (r) { all.push(costPerM(r[2], s.price, s.util)); }); });
+    var lo = Math.min.apply(null, all), hi = Math.max.apply(null, all);
+    var steps = [0.001, 0.002, 0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 1, 2, 5, 10, 20, 50];
+    var yMin = steps[0], yMax = steps[steps.length - 1], i;
+    for (i = steps.length - 1; i >= 0; i--) if (steps[i] <= lo) { yMin = steps[i]; break; }
+    for (i = 0; i < steps.length; i++) if (steps[i] >= hi) { yMax = steps[i]; break; }
+    var lmin = Math.log10(yMin), lmax = Math.log10(yMax);
+    var x = function (v) { return L + v / 350 * (W - L - R); };
+    var y = function (v) { return T + (lmax - Math.log10(v)) / (lmax - lmin) * (H - T - B); };
+    steps.forEach(function (t) {
+      if (t < yMin || t > yMax) return;
+      el("line", { x1: L, x2: W - R, y1: y(t), y2: y(t), "class": "gl" }, svg);
+      el("text", { x: L - 8, y: y(t) + 4, "text-anchor": "end" }, svg, money(t));
+    });
+    for (var xv = 0; xv <= 350; xv += 50) {
+      el("line", { x1: x(xv), x2: x(xv), y1: H - B, y2: H - B + 4, "class": "axis" }, svg);
+      el("text", { x: x(xv), y: H - B + 18, "text-anchor": "middle" }, svg, String(xv));
+    }
+    el("line", { x1: L, x2: W - R, y1: H - B, y2: H - B, "class": "axis" }, svg);
+    el("text", { x: (L + W - R) / 2, y: H - 6, "text-anchor": "middle" }, svg, "tokens/s per user");
+    el("text", { x: 14, y: (T + H - B) / 2, "text-anchor": "middle", transform: "rotate(-90 14 " + ((T + H - B) / 2) + ")" }, svg, "$ per 1M output tokens");
+    [["ep8", "var(--accent2)"], ["ep64", "var(--accent)"]].forEach(function (pair) {
+      var k = pair[0], col = pair[1];
+      var pts = DEC[k].map(function (r) { return [x(r[1]), y(costPerM(r[2], s.price, s.util)), r]; });
+      el("polyline", { points: pts.map(function (p) { return p[0].toFixed(1) + "," + p[1].toFixed(1); }).join(" "), fill: "none", stroke: col, "stroke-width": 2.25 }, svg);
+      pts.forEach(function (p) {
+        var selected = k === s.ep && p[2][0] === s.batch;
+        var c = el("circle", { cx: p[0], cy: p[1], r: selected ? 7 : 4.5, fill: selected ? "var(--surface)" : col, stroke: col, "stroke-width": selected ? 3 : 1.5, style: "cursor:pointer" }, svg);
+        el("title", {}, c, (k === "ep64" ? "EP64" : "EP8") + ", " + p[2][0] + " requests: " + p[2][1] + " tok/s/user, " + money(costPerM(p[2][2], s.price, s.util)) + "/1M");
+        c.addEventListener("click", function () { $("ep").value = k; batchSel.value = String(p[2][0]); render(); });
+        if (k === "ep64" || selected) {
+          var lbl = selected ? money(costPerM(p[2][2], s.price, s.util)) : String(p[2][0]);
+          el("text", { x: p[0], y: p[1] - (selected ? 13 : 9), "text-anchor": "middle", style: selected ? "fill:var(--ink);font-weight:600" : "" }, svg, lbl);
+        }
+      });
+    });
+  }
+
+  function drawPrefill(s) {
+    var svg = $("preChart"); clear(svg);
+    var W = 680, H = 280, L = 64, R = 18, T = 16, B = 44;
+    var costs = PRE.map(function (r) { return costPerM(r[2], s.price, s.util); });
+    var top = Math.max.apply(null, costs) * 1.2;
+    var mag = Math.pow(10, Math.floor(Math.log10(top))), step = mag;
+    if (top / step < 3) step = mag / 2;
+    if (top / step < 3) step = mag / 5;
+    var yMax = Math.ceil(top / step) * step;
+    var x = function (v) { return L + v / 800 * (W - L - R); };
+    var y = function (v) { return T + (1 - v / yMax) * (H - T - B); };
+    for (var t = 0; t <= yMax + 1e-12; t += step) {
+      el("line", { x1: L, x2: W - R, y1: y(t), y2: y(t), "class": t === 0 ? "axis" : "gl" }, svg);
+      el("text", { x: L - 8, y: y(t) + 4, "text-anchor": "end" }, svg, t === 0 ? "$0" : money(t));
+    }
+    for (var xv = 0; xv <= 800; xv += 100) el("text", { x: x(xv), y: H - B + 18, "text-anchor": "middle" }, svg, String(xv));
+    el("text", { x: (L + W - R) / 2, y: H - 6, "text-anchor": "middle" }, svg, "ms per prefill step");
+    el("text", { x: 14, y: (T + H - B) / 2, "text-anchor": "middle", transform: "rotate(-90 14 " + ((T + H - B) / 2) + ")" }, svg, "$ per 1M uncached input");
+    var pts = PRE.map(function (r, i) { return [x(r[1]), y(costs[i]), r, costs[i]]; });
+    el("polyline", { points: pts.map(function (p) { return p[0].toFixed(1) + "," + p[1].toFixed(1); }).join(" "), fill: "none", stroke: "var(--accent)", "stroke-width": 2.25 }, svg);
+    pts.forEach(function (p) {
+      var selected = p[2][0] === s.pbatch;
+      var c = el("circle", { cx: p[0], cy: p[1], r: selected ? 7 : 4.5, fill: selected ? "var(--surface)" : "var(--accent)", stroke: "var(--accent)", "stroke-width": selected ? 3 : 1.5, style: "cursor:pointer" }, svg);
+      el("title", {}, c, int(p[2][0]) + " tokens: " + int(p[2][2]) + " tok/s/GPU, " + money(p[3]) + "/1M");
+      c.addEventListener("click", function () { pbSel.value = String(p[2][0]); render(); });
+      el("text", { x: p[0], y: p[1] - (selected ? 13 : 9), "text-anchor": "middle", style: selected ? "fill:var(--ink);font-weight:600" : "" }, svg, selected ? money(p[3]) : (p[2][0] / 1024) + "k");
+    });
+  }
+
+  function render() {
+    var s = S();
+    $("priceOut").textContent = "$" + s.price.toFixed(2);
+    $("utilOut").textContent = Math.round(s.util * 100) + "%";
+    $("ratioOut").textContent = s.ratio.toFixed(1) + " : 1";
+    $("cacheOut").textContent = pct(s.cache);
+    Array.prototype.forEach.call(document.querySelectorAll(".uP"), function (b) { b.setAttribute("aria-pressed", String(+b.dataset.u === Math.round(s.util * 100))); });
+    Array.prototype.forEach.call(document.querySelectorAll(".pP"), function (b) { b.setAttribute("aria-pressed", String(Math.abs(+b.dataset.p - s.price) < 0.005)); });
+    Array.prototype.forEach.call(document.querySelectorAll(".mP"), function (b) { b.setAttribute("aria-pressed", String(Math.abs(+b.dataset.r - s.ratio) < 0.05 && Math.abs(+b.dataset.c / 100 - s.cache) < 0.0005)); });
+
+    var d = row(s.ep, s.batch), p = prow(s.pbatch);
+    var out = costPerM(d[2], s.price, s.util), inp = costPerM(p[2], s.price, s.util);
+    var m = mix(s.ratio, s.cache);
+    var costBn = (m.out * out + m.un * inp) / 1e6;
+    $("tOut").textContent = money(out);
+    $("tOutU").textContent = "per 1M, at " + d[1] + " tok/s per user";
+    $("tIn").textContent = money(inp);
+    $("tBn").textContent = money(costBn);
+    $("tBnU").textContent = (m.out / 1e7).toFixed(1) + "% output, " + (m.un / 1e7).toFixed(1) + "% uncached, " + (m.ca / 1e7).toFixed(1) + "% cached";
+    var keyP = PRICES.filter(function (q) { return q.key; })[0];
+    $("tGM").textContent = pct(1 - costBn / revenue(m, keyP));
+
+    drawDecode(s); drawPrefill(s);
+
+    $("mBody").innerHTML = PRICES.map(function (q) {
+      if (q.g) return "<tr class=\"grp\"><td colspan=\"4\">" + q.g + "</td></tr>";
+      var rev = revenue(m, q);
+      return "<tr" + (q.key ? " class=\"sel\"" : "") + "><td>" + q.name + "<span class=\"d\">" + q.d + "</span></td><td class=\"num\">" + money(q.m) + " / " + money(q.h) + " / " + money(q.o) +
+        "</td><td class=\"num\">" + money(rev) + "</td><td>" + pill(1 - costBn / rev) + "</td></tr>";
+    }).join("");
+
+    // Tweet check: fixed 80k / 16k throughput, $3 and $6.
+    var ZP = { m: 0.15, h: 0.003, o: 0.60 }, ZPk = { m: 0.30, h: 0.006, o: 1.20 };
+    var mt = mix(99, 0.97 / 0.99), mr = mix(51.1, 0.917);
+    var scen = [
+      ["As posted, off-peak", mt, ZP, 1],
+      ["As posted, peak", mt, ZPk, 1],
+      ["Real OpenRouter mix (51:1, 91.7%), off-peak", mr, ZP, 1],
+      ["Real mix, DeepSeek realised price", mr, keyP, 1],
+      ["Real mix, realised price, 53% utilization (Copilot-shaped)", mr, keyP, 0.53],
+      ["Real mix, realised price, 37% utilization (sized for peak)", mr, keyP, 0.37],
+      ["Real mix, DeepInfra price, 53% utilization", mr, PRICES[7], 0.53],
+      ["Real mix, Sail Research price, 53% utilization", mr, PRICES[9], 0.53]
+    ];
+    $("zBody").innerHTML = scen.map(function (z) {
+      var sec = gpuSeconds(z[1], 80000, 16000) / z[3], rev = revenue(z[1], z[2]);
+      var g3 = 1 - sec / 3600 * 3 / rev, g6 = 1 - sec / 3600 * 6 / rev;
+      return "<tr><td>" + z[0] + "</td><td class=\"num\">" + int(sec) + "</td><td class=\"num\">" + money(rev) + "</td><td>" + pill(g3) + "</td><td>" + pill(g6) + "</td></tr>";
+    }).join("");
+
+    $("trafficBody").innerHTML = TRAFFIC.map(function (t) {
+      var sel = Math.abs(t[1] - s.ratio) < 0.05 && Math.abs(t[2] / 100 - s.cache) < 0.0005;
+      return "<tr" + (sel ? " class=\"sel\"" : "") + "><td>" + t[0] + "</td><td class=\"num\">" + t[1].toFixed(1) + " : 1</td><td class=\"num\">" + t[2].toFixed(1) + "%</td></tr>";
+    }).join("");
+
+    var sb = "";
+    for (var i = DEC.ep64.length - 1; i >= 0; i--) {
+      var a = DEC.ep64[i], b = DEC.ep8[i];
+      sb += "<tr" + (a[0] === s.batch ? " class=\"sel\"" : "") + "><td>" + a[0] + "</td><td class=\"num\">" + a[1] + "</td><td class=\"num\">" + int(a[2]) + "</td><td class=\"num\">" + money(costPerM(a[2], s.price, s.util)) +
+        "</td><td class=\"num\">" + b[1] + "</td><td class=\"num\">" + int(b[2]) + "</td><td class=\"num\">" + money(costPerM(b[2], s.price, s.util)) + "</td></tr>";
+    }
+    $("sweepBody").innerHTML = sb;
+
+    var febUnTps = FEB25.preTpsAll * (1 - FEB25.cache), febUnCost = FEB25.inCostAll / (1 - FEB25.cache);
+    var nBlend = out + FEB25.ratio * (1 - FEB25.cache) * inp;
+    var rows = [
+      ["GPU cost per hour", "$2.00", "$" + s.price.toFixed(2), (s.price / 2).toFixed(2) + "x"],
+      ["Prefill uncached tokens/s per GPU", int(febUnTps), int(p[2]), (p[2] / febUnTps).toFixed(0) + "x"],
+      ["Decode tokens/s per GPU", int(FEB25.decTps), int(d[2]), (d[2] / FEB25.decTps).toFixed(1) + "x"],
+      ["Cost per 1M uncached input", money(febUnCost), money(inp), (febUnCost / inp).toFixed(0) + "x cheaper"],
+      ["Cost per 1M output", money(FEB25.outCost), money(out), (FEB25.outCost / out).toFixed(1) + "x cheaper"],
+      ["All-in cost per 1M output, 2025 mix", money(FEB25.perOut), money(nBlend), (FEB25.perOut / nBlend).toFixed(1) + "x cheaper"]
+    ];
+    $("cmpBody").innerHTML = rows.map(function (r) { return "<tr><td>" + r[0] + "</td><td class=\"num\">" + r[1] + "</td><td class=\"num\">" + r[2] + "</td><td class=\"num\">" + r[3] + "</td></tr>"; }).join("");
+  }
+
+  ["price", "util", "ratio", "cache"].forEach(function (id) { $(id).addEventListener("input", render); });
+  ["ep", "batch", "pbatch"].forEach(function (id) { $(id).addEventListener("change", render); });
+  Array.prototype.forEach.call(document.querySelectorAll(".uP"), function (b) { b.addEventListener("click", function () { $("util").value = b.dataset.u; render(); }); });
+  Array.prototype.forEach.call(document.querySelectorAll(".pP"), function (b) { b.addEventListener("click", function () { $("price").value = b.dataset.p; render(); }); });
+  Array.prototype.forEach.call(document.querySelectorAll(".mP"), function (b) { b.addEventListener("click", function () { $("ratio").value = b.dataset.r; $("cache").value = b.dataset.c; render(); }); });
+  $("reset").addEventListener("click", function () { setDefaults(); render(); });
+  setDefaults(); render();
+})();
+</script>
+</body>
+</html>
