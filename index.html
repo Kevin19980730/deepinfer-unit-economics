@@ -170,6 +170,7 @@ code { font: 13px var(--f-mono); }
         <div class="presets" id="mixPresets">
           <button type="button" class="mP" data-r="51.1" data-c="91.7">OpenRouter V4.1 Flash, last 7 days</button>
           <button type="button" class="mP" data-r="71.7" data-c="94.2">OpenRouter V4.1 Flash 1017, first 4 days</button>
+          <button type="button" class="mP" data-r="107.1" data-c="96">DeepSeek live, Oct 2026</button>
           <button type="button" class="mP" data-r="99" data-c="98">Zephyr tweet (97 / 2 / 1)</button>
           <button type="button" class="mP" data-r="3.6" data-c="56">DeepSeek, Feb 2025</button>
         </div>
@@ -215,6 +216,23 @@ code { font: 13px var(--f-mono); }
             <tbody id="revBody"></tbody>
           </table>
         </div>
+      </section>
+
+      <section id="live">
+        <h2>Against DeepSeek&rsquo;s live production stats</h2>
+        <p class="sub">DeepSeek&rsquo;s launch post gives live V4.1-Flash figures: one cluster serves 155 trillion tokens a day and earns $38 per card-hour at off-peak prices, &ldquo;ignoring peak and trough&rdquo;. P:D is close to 1:1, so the live mix is 1.5M input tokens per 14k output tokens, about 107 : 1. The right-hand column uses your settings in the rail.</p>
+        <div class="panel tablewrap">
+          <table>
+            <thead><tr><th>Metric</th><th>DeepSeek live</th><th>This page</th><th>Page &divide; live</th></tr></thead>
+            <tbody id="liveBody"></tbody>
+          </table>
+        </div>
+        <ul class="list">
+          <li><strong>The $38 is per busy card-hour.</strong> Live throughput &times; the live mix &times; off-peak list prices gives <span id="liveRecalc"></span>, matching the $38 disclosed. It already reflects real batching, but it does not count idle off-peak hours or the higher peak price. Compare it with the page&rsquo;s per-busy-hour figure, not the one at utilization.</li>
+          <li><strong>Tokens per busy card-hour are close to the benchmark.</strong> Live decode is slower than the chart: 14k at 230 tok/s per user, against the EP64 sweep&rsquo;s 15.7k at 246. Prefill runs at 60k because the average prompt is 77k tokens. Revenue per token is lower because 96% of input is a $0.003 cache hit.</li>
+          <li><strong>Implied cluster size.</strong> <span id="liveFleet"></span></li>
+        </ul>
+        <p class="note">Live figures: prefill 60k uncached / 1.5M incl. hits tok/s per card, 96% hit rate, 77k average input, TTFT 400 ms average / 1,000 ms P99; decode 14k tok/s per card at 230 tok/s per user (300 for code); KV cache kept 72 h after a session goes idle. DeepSeek notes the machines keep some headroom for traffic swings. It does not say which chip the cluster runs on; DeepInfer runs on NVIDIA and Huawei Ascend.</p>
       </section>
 
       <section id="zephyr">
@@ -302,7 +320,7 @@ code { font: 13px var(--f-mono); }
 
       <section id="utilization">
         <h2>Utilization presets</h2>
-        <p class="sub">A fleet is sized for its busiest hour, so outside that hour some GPUs sit idle unless other work fills them. If the fleet is just full at peak, average utilization = 1 &divide; (peak-to-average demand). None of these figures is a measured V4.1-Flash fleet utilization; nobody publishes one.</p>
+        <p class="sub">A fleet is sized for its busiest hour, so outside that hour some GPUs sit idle unless other work fills them. If the fleet is just full at peak, average utilization = 1 &divide; (peak-to-average demand). None of these figures is a measured V4.1-Flash fleet utilization; DeepSeek&rsquo;s $38 per card-hour is a busy-hour figure and doesn&rsquo;t give one either.</p>
         <div class="panel tablewrap">
           <table>
             <thead><tr><th>Preset</th><th>Derivation</th><th>Utilization</th><th>Source</th></tr></thead>
@@ -337,6 +355,7 @@ code { font: 13px var(--f-mono); }
               <tr><td>DeepSeek V4.1-Flash list prices</td><td><a href="https://api-docs.deepseek.com/quick_start/pricing/" target="_blank" rel="noopener">api-docs.deepseek.com</a>, off-peak $0.15 / $0.003 / $0.60, peak 2&times;</td><td><span class="tag">disclosed</span></td></tr>
               <tr><td>Reseller prices, effective prices, traffic</td><td>OpenRouter endpoints, effective-pricing and model-activity data for <code>deepseek-v4.1-flash</code> and <code>-1017</code></td><td><span class="tag">disclosed</span></td></tr>
               <tr><td>DeepSeek realised price and peak share</td><td>$0.936 effective output &divide; $0.60 off-peak</td><td><span class="tag">derived</span></td></tr>
+              <tr><td>Live production stats, $38 per card-hour, 155T tokens/day</td><td><a href="https://zhuanlan.zhihu.com/p/2095560295930508953" target="_blank" rel="noopener">DeepSeek, &ldquo;DeepSeek V4.1 Flash large-scale inference deployment&rdquo;</a> (Zhihu, in Chinese), live-stats table</td><td><span class="tag">disclosed</span></td></tr>
               <tr><td>Margin estimate being checked</td><td><a href="https://x.com/zephyr_z9/status/2112499092031185134" target="_blank" rel="noopener">@zephyr_z9 on X</a>, 20 Oct 2026</td><td><span class="tag">third party</span></td></tr>
               <tr><td>Feb-2025 fleet costs and mix</td><td>608B in, 168B out, 56% cached; $87,072/day</td><td><span class="tag">disclosed</span></td></tr>
               <tr><td>GPU cost per hour</td><td><a href="https://www.silicondata.com/products/silicon-index/b200" target="_blank" rel="noopener">Silicon Data B200 index</a> $6.14 (20 Oct 2026; Jan-2026 avg $4.41); B300 $7.02</td><td><span class="tag">disclosed</span></td></tr>
@@ -374,6 +393,7 @@ code { font: 13px var(--f-mono); }
   ];
   var TRAFFIC = [["22 Sep (from 21 Sep)", 66.2, 88.7], ["29 Sep", 61.4, 90.9], ["6 Oct", 62.5, 91.7], ["13 Oct", 48.0, 91.2], ["20 Oct", 51.1, 91.7], ["1017 checkpoint, 17-20 Oct", 71.7, 94.2]];
   var FEB25 = { preTpsAll: 73700 / 8, decTps: 14800 / 8, ratio: 608 / 168, cache: 0.56, inCostAll: 0.0603, outCost: 0.3003, perOut: 87072 / 168000 };
+  var LIVE = { pre: 60000, preAll: 1.5e6, cache: 0.96, dec: 14000, user: 230, rev: 38, tokDay: 155e12 };
   var DEF = { price: 6.14, util: 37, ep: "ep64", batch: "128", pbatch: "16384", ratio: 71.7, cache: 94.2 };
   var NS = "http://www.w3.org/2000/svg";
   var $ = function (id) { return document.getElementById(id); };
@@ -538,6 +558,31 @@ code { font: 13px var(--f-mono); }
       return "<tr" + (q.key ? " class=\"sel\"" : "") + "><td>" + q.name + "<span class=\"d\">" + q.d + "</span></td><td class=\"num\">" + money(busy) + "</td><td class=\"num\">" + money(atU) +
         "</td><td class=\"num\">" + bn(revGW) + "</td><td class=\"num\">" + bn(gp) + "</td></tr>";
     }).join("");
+
+    // Live production stats: P:D 1:1, so input per output = prefill tok/s incl. hits / decode tok/s.
+    var OFF = PRICES[1], lm = mix(LIVE.preAll / LIVE.dec, LIVE.cache);
+    var liveHrsPerBn = gpuSeconds(lm, LIVE.pre, LIVE.dec) / 3600, liveBn = revenue(lm, OFF), liveBusy = liveBn / liveHrsPerBn;
+    var pageBn = revenue(m, OFF), pageBusy = pageBn / busyHrsPerBn;
+    var x2 = function (a, b) { return (a / b).toFixed(2) + "x"; };
+    var live = [
+      ["Prefill uncached tokens/s per GPU", int(LIVE.pre), int(p[2]), x2(p[2], LIVE.pre)],
+      ["Prefill tokens/s per GPU incl. cache hits", int(LIVE.preAll), int(p[2] / (1 - s.cache)), x2(p[2] / (1 - s.cache), LIVE.preAll)],
+      ["Decode tokens/s per GPU", int(LIVE.dec), int(d[2]), x2(d[2], LIVE.dec)],
+      ["Decode tokens/s per user", LIVE.user + " (code 300)", String(d[1]), x2(d[1], LIVE.user)],
+      ["Input tokens per output token", (LIVE.preAll / LIVE.dec).toFixed(1) + " : 1", s.ratio.toFixed(1) + " : 1", x2(s.ratio, LIVE.preAll / LIVE.dec)],
+      ["Input cache hit rate", pct(LIVE.cache), pct(s.cache), "&ndash;"],
+      ["Tokens per busy GPU-hour", (1 / liveHrsPerBn).toFixed(2) + "B", (1 / busyHrsPerBn).toFixed(2) + "B", x2(liveHrsPerBn, busyHrsPerBn)],
+      ["Revenue per 1B tokens, off-peak list", money(liveBn), money(pageBn), x2(pageBn, liveBn)],
+      ["Revenue per busy GPU-hour, off-peak list", "$38 disclosed", money(pageBusy), x2(pageBusy, LIVE.rev)],
+      ["Gross margin per busy GPU-hour at $" + s.price.toFixed(2) + "/hr", pct(1 - s.price / LIVE.rev), pct(1 - s.price / pageBusy), "&ndash;"],
+      ["Gross margin at " + Math.round(s.util * 100) + "% utilization", pct(1 - s.price / (LIVE.rev * s.util)), pct(1 - s.price / (pageBusy * s.util)), "&ndash;"]
+    ];
+    $("liveBody").innerHTML = live.map(function (r) { return "<tr><td>" + r[0] + "</td><td class=\"num\">" + r[1] + "</td><td class=\"num\">" + r[2] + "</td><td class=\"num\">" + r[3] + "</td></tr>"; }).join("");
+    $("liveRecalc").textContent = money(liveBusy) + " per card-hour (" + money(liveBn) + " per 1B tokens \u00d7 " + (1 / liveHrsPerBn).toFixed(2) + "B tokens per hour)";
+    var liveGpus = LIVE.tokDay / (24 / liveHrsPerBn * 1e9);
+    $("liveFleet").textContent = "If 155 trillion tokens a day is served at the live per-card rate, the cluster is about " + int(Math.round(liveGpus / 100) * 100) +
+      " cards (half prefill, half decode), earning about " + money(LIVE.tokDay / 1e9 * liveBn / 1e6) + "M a day or $" + (LIVE.tokDay / 1e9 * liveBn * 365 / 1e9).toFixed(2) +
+      "B a year at off-peak prices. If the cards are not busy every hour, the cluster is bigger than this.";
 
     // Tweet check: fixed 80k / 16k throughput, $3 and $6.
     var ZP = { m: 0.15, h: 0.003, o: 0.60 }, ZPk = { m: 0.30, h: 0.006, o: 1.20 };
